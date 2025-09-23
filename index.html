@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Накладання шуму на фото</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#4f46e5}
+    body{margin:0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#fff);color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .card{width:920px;max-width:96%;background:var(--card);border-radius:18px;box-shadow:0 8px 30px rgba(16,24,40,0.06);padding:28px;display:grid;grid-template-columns:1fr 340px;gap:24px}
+    .preview{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed rgba(15,23,42,0.06);border-radius:12px;padding:18px;min-height:420px;overflow:hidden}
+    canvas{max-width:100%;height:auto;border-radius:8px;background:#fff}
+    .controls{display:flex;flex-direction:column;gap:14px}
+    .panel{padding:14px;border-radius:12px;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=file]{display:none}
+    .filebtn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer;font-weight:600}
+    .slider{width:100%}
+    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn-apply{background:var(--accent);color:#fff}
+    .btn-download{background:#0ea5a4;color:#fff}
+    .btn-disabled{opacity:.5;cursor:not-allowed}
+    @media(max-width:880px){.card{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="preview" id="preview">
+      <canvas id="canvas" width="800" height="500"></canvas>
+      <div id="hint" style="margin-top:12px;text-align:center;font-size:13px;color:#6b7280">Завантажте фото або перетягніть його сюди</div>
+    </div>
+    <div class="controls">
+      <div class="panel">
+        <label for="file">Фото</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label class="filebtn" for="file">Обрати файл</label>
+          <input id="file" type="file" accept="image/*">
+          <button id="reset" class="btn" style="background:#eef2ff">Очистити</button>
+        </div>
+      </div>
+      <div class="panel">
+        <label for="noiseRange">Рівень шуму: <span id="noiseLabel">20%</span></label>
+        <input id="noiseRange" class="slider" type="range" min="0" max="100" value="20">
+      </div>
+      <div class="panel">
+        <label>Дія</label>
+        <div style="display:flex;gap:10px">
+          <button id="apply" class="btn btn-apply">Накласти шум</button>
+          <button id="download" class="btn btn-download btn-disabled" disabled>Завантажити</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+const fileInput=document.getElementById('file'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),noiseRange=document.getElementById('noiseRange'),noiseLabel=document.getElementById('noiseLabel'),applyBtn=document.getElementById('apply'),downloadBtn=document.getElementById('download'),resetBtn=document.getElementById('reset'),preview=document.getElementById('preview'),hint=document.getElementById('hint');
+let originalImage=null,originalImageData=null,currentNoise=Number(noiseRange.value)/100;
+function clamp(v){return v<0?0:(v>255?255:v)}
+function drawImageToCanvas(img){const maxWidth=preview.clientWidth-36,maxHeight=540;let w=img.width,h=img.height;const ratio=Math.min(maxWidth/w,maxHeight/h,1);w=Math.round(w*ratio);h=Math.round(h*ratio);canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);originalImageData=ctx.getImageData(0,0,canvas.width,canvas.height);hint.style.display='none'}
+function applyNoiseToImageData(imageData,strength){const out=new ImageData(new Uint8ClampedArray(imageData.data),imageData.width,imageData.height),data=out.data;for(let i=0;i<data.length;i+=4){const u1=Math.random()||1e-10,u2=Math.random(),randStdNormal=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2),amp=80*strength,noise=randStdNormal*amp;data[i]=clamp(data[i]+noise);data[i+1]=clamp(data[i+1]+noise);data[i+2]=clamp(data[i+2]+noise)}return out}
+function renderPreview(){if(!originalImageData)return;const noisy=applyNoiseToImageData(originalImageData,currentNoise);ctx.putImageData(noisy,0,0)}
+fileInput.addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{originalImage=img;drawImageToCanvas(img);renderPreview();downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');URL.revokeObjectURL(url)};img.onerror=()=>{alert('Не вдалося завантажити фото')};img.src=url});
+preview.addEventListener('dragover',ev=>{ev.preventDefault();preview.style.borderColor='rgba(79,70,229,0.3)'});
+preview.addEventListener('dragleave',()=>{preview.style.borderColor=''});
+preview.addEventListener('drop',ev=>{ev.preventDefault();preview.style.borderColor='';const f=ev.dataTransfer.files&&ev.dataTransfer.files[0];if(f){fileInput.files=ev.dataTransfer.files;fileInput.dispatchEvent(new Event('change'))}});
+noiseRange.addEventListener('input',()=>{currentNoise=Number(noiseRange.value)/100;noiseLabel.textContent=Math.round(currentNoise*100)+'%';renderPreview()});
+applyBtn.addEventListener('click',()=>{if(!originalImageData)return;const applied=applyNoiseToImageData(originalImageData,currentNoise);ctx.putImageData(applied,0,0);originalImageData=ctx.getImageData(0,0,canvas.width,canvas.height);downloadBtn.disabled=false;downloadBtn.classList.remove('btn-disabled')});
+downloadBtn.addEventListener('click',()=>{const dataURL=canvas.toDataURL('image/png'),a=document.createElement('a');a.href=dataURL;a.download='photo_with_noise.png';document.body.appendChild(a);a.click();a.remove()});
+resetBtn.addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);originalImage=null;originalImageData=null;fileInput.value='';noiseRange.value=20;currentNoise=.2;noiseLabel.textContent='20%';downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');hint.style.display='block'});
+window.addEventListener('resize',()=>{if(originalImage){drawImageToCanvas(originalImage);renderPreview()}});
+</script>
+</body>
+</html>
