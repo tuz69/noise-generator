@@ -5,68 +5,212 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Накладання шуму на фото</title>
   <style>
-    :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#4f46e5}
-    body{margin:0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#fff);color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh}
-    .card{width:920px;max-width:96%;background:var(--card);border-radius:18px;box-shadow:0 8px 30px rgba(16,24,40,0.06);padding:28px;display:grid;grid-template-columns:1fr 340px;gap:24px}
-    .preview{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed rgba(15,23,42,0.06);border-radius:12px;padding:18px;min-height:420px;overflow:hidden}
-    canvas{max-width:100%;height:auto;border-radius:8px;background:#fff}
-    .controls{display:flex;flex-direction:column;gap:14px}
-    .panel{padding:14px;border-radius:12px;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    body{margin:0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f6f7fb}
+    .card{width:920px;max-width:96%;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .preview{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed #ccc;border-radius:10px;padding:12px;min-height:420px;overflow:auto}
+    canvas{max-width:100%;height:auto;border-radius:6px;background:#fff}
+    .controls{display:flex;flex-direction:column;gap:12px}
+    .panel{padding:12px;border-radius:8px;background:#fff}
+    label{font-size:13px;color:#555;margin-bottom:4px;display:block}
     input[type=file]{display:none}
-    .filebtn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer;font-weight:600}
+    .filebtn{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-weight:600}
     .slider{width:100%}
-    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
-    .btn-apply{background:var(--accent);color:#fff}
+    .btn{padding:8px 12px;border-radius:6px;border:0;cursor:pointer;font-weight:600}
+    .btn-apply{background:#4f46e5;color:#fff}
     .btn-download{background:#0ea5a4;color:#fff}
+    .btn-muted{background:#eee}
     .btn-disabled{opacity:.5;cursor:not-allowed}
-    @media(max-width:880px){.card{grid-template-columns:1fr;}}
+    /* viewer */
+    #viewer{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999}
+    .viewer-wrap{position:relative;background:#fff;padding:10px;border-radius:8px;max-width:92%;max-height:92%;overflow:hidden}
+    .viewer-wrap img{display:block;max-width:100%;max-height:80vh}
+    #glass{position:absolute;width:160px;height:160px;border-radius:50%;box-shadow:0 6px 18px rgba(0,0,0,.35);border:3px solid rgba(255,255,255,.9);pointer-events:none;display:none;background-repeat:no-repeat}
+    .viewer-close{position:absolute;right:8px;top:8px;background:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
+    @media(max-width:860px){.card{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="card">
     <div class="preview" id="preview">
-      <canvas id="canvas" width="800" height="500"></canvas>
-      <div id="hint" style="margin-top:12px;text-align:center;font-size:13px;color:#6b7280">Завантажте фото або перетягніть його сюди</div>
+      <canvas id="canvas"></canvas>
+      <div id="hint" style="margin-top:12px;font-size:13px;color:#666">Завантажте фото</div>
     </div>
     <div class="controls">
       <div class="panel">
-        <label for="file">Фото</label>
-        <div style="display:flex;gap:10px;align-items:center">
-          <label class="filebtn" for="file">Обрати файл</label>
+        <label>Фото</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label class="filebtn" for="file">Обрати</label>
           <input id="file" type="file" accept="image/*">
-          <button id="reset" class="btn" style="background:#eef2ff">Очистити</button>
+          <button id="reset" class="btn btn-muted">Очистити</button>
         </div>
       </div>
       <div class="panel">
-        <label for="noiseRange">Рівень шуму: <span id="noiseLabel">20%</span></label>
+        <label>Шум: <span id="noiseLabel">20%</span></label>
         <input id="noiseRange" class="slider" type="range" min="0" max="100" value="20">
       </div>
       <div class="panel">
-        <label>Дія</label>
-        <div style="display:flex;gap:10px">
-          <button id="apply" class="btn btn-apply">Накласти шум</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="apply" class="btn btn-apply">Накласти</button>
+          <button id="clearNoise" class="btn btn-muted">Очистити шум</button>
+          <button id="viewBtn" class="btn">Переглянути</button>
           <button id="download" class="btn btn-download btn-disabled" disabled>Завантажити</button>
         </div>
       </div>
     </div>
   </div>
+
+  <div id="viewer">
+    <div class="viewer-wrap" id="viewerWrap">
+      <button class="viewer-close" id="closeViewer">✕</button>
+      <img id="viewerImg" src="" alt=""/>
+      <div id="glass"></div>
+    </div>
+  </div>
+
 <script>
-const fileInput=document.getElementById('file'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),noiseRange=document.getElementById('noiseRange'),noiseLabel=document.getElementById('noiseLabel'),applyBtn=document.getElementById('apply'),downloadBtn=document.getElementById('download'),resetBtn=document.getElementById('reset'),preview=document.getElementById('preview'),hint=document.getElementById('hint');
-let originalImage=null,originalImageData=null,currentNoise=Number(noiseRange.value)/100;
+const fileInput = document.getElementById('file');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const range = document.getElementById('noiseRange');
+const noiseLabel = document.getElementById('noiseLabel');
+const applyBtn = document.getElementById('apply');
+const clearBtn = document.getElementById('clearNoise');
+const viewBtn = document.getElementById('viewBtn');
+const downloadBtn = document.getElementById('download');
+const resetBtn = document.getElementById('reset');
+const preview = document.getElementById('preview');
+const hint = document.getElementById('hint');
+
+const viewer = document.getElementById('viewer');
+const viewerImg = document.getElementById('viewerImg');
+const glass = document.getElementById('glass');
+const closeViewer = document.getElementById('closeViewer');
+const viewerWrap = document.getElementById('viewerWrap');
+
+let imgObj = null; // Image
+let orig = null;   // original ImageData (never changed)
+let cur = null;    // current ImageData shown on canvas
+let n = Number(range.value) / 100;
+
 function clamp(v){return v<0?0:(v>255?255:v)}
-function drawImageToCanvas(img){const maxWidth=preview.clientWidth-36,maxHeight=540;let w=img.width,h=img.height;const ratio=Math.min(maxWidth/w,maxHeight/h,1);w=Math.round(w*ratio);h=Math.round(h*ratio);canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);originalImageData=ctx.getImageData(0,0,canvas.width,canvas.height);hint.style.display='none'}
-function applyNoiseToImageData(imageData,strength){const out=new ImageData(new Uint8ClampedArray(imageData.data),imageData.width,imageData.height),data=out.data;for(let i=0;i<data.length;i+=4){const u1=Math.random()||1e-10,u2=Math.random(),randStdNormal=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2),amp=80*strength,noise=randStdNormal*amp;data[i]=clamp(data[i]+noise);data[i+1]=clamp(data[i+1]+noise);data[i+2]=clamp(data[i+2]+noise)}return out}
-function renderPreview(){if(!originalImageData)return;const noisy=applyNoiseToImageData(originalImageData,currentNoise);ctx.putImageData(noisy,0,0)}
-fileInput.addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{originalImage=img;drawImageToCanvas(img);renderPreview();downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');URL.revokeObjectURL(url)};img.onerror=()=>{alert('Не вдалося завантажити фото')};img.src=url});
-preview.addEventListener('dragover',ev=>{ev.preventDefault();preview.style.borderColor='rgba(79,70,229,0.3)'});
-preview.addEventListener('dragleave',()=>{preview.style.borderColor=''});
-preview.addEventListener('drop',ev=>{ev.preventDefault();preview.style.borderColor='';const f=ev.dataTransfer.files&&ev.dataTransfer.files[0];if(f){fileInput.files=ev.dataTransfer.files;fileInput.dispatchEvent(new Event('change'))}});
-noiseRange.addEventListener('input',()=>{currentNoise=Number(noiseRange.value)/100;noiseLabel.textContent=Math.round(currentNoise*100)+'%';renderPreview()});
-applyBtn.addEventListener('click',()=>{if(!originalImageData)return;const applied=applyNoiseToImageData(originalImageData,currentNoise);ctx.putImageData(applied,0,0);originalImageData=ctx.getImageData(0,0,canvas.width,canvas.height);downloadBtn.disabled=false;downloadBtn.classList.remove('btn-disabled')});
-downloadBtn.addEventListener('click',()=>{const dataURL=canvas.toDataURL('image/png'),a=document.createElement('a');a.href=dataURL;a.download='photo_with_noise.png';document.body.appendChild(a);a.click();a.remove()});
-resetBtn.addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);originalImage=null;originalImageData=null;fileInput.value='';noiseRange.value=20;currentNoise=.2;noiseLabel.textContent='20%';downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');hint.style.display='block'});
-window.addEventListener('resize',()=>{if(originalImage){drawImageToCanvas(originalImage);renderPreview()}});
+function cloneImageData(src){return new ImageData(new Uint8ClampedArray(src.data), src.width, src.height)}
+
+function draw(img){
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0);
+  orig = ctx.getImageData(0,0,canvas.width,canvas.height);
+  cur = cloneImageData(orig);
+  hint.style.display = 'none';
+}
+
+function addNoiseTo(src, strength){
+  const out = new ImageData(new Uint8ClampedArray(src.data), src.width, src.height);
+  const d = out.data;
+  for(let i=0;i<d.length;i+=4){
+    const u1 = Math.random() || 1e-10;
+    const u2 = Math.random();
+    const sRand = Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+    const amp = 80 * strength;
+    const no = sRand * amp;
+    d[i] = clamp(d[i] + no);
+    d[i+1] = clamp(d[i+1] + no);
+    d[i+2] = clamp(d[i+2] + no);
+  }
+  return out;
+}
+
+function renderPreview(){
+  if(!orig) return;
+  const previewData = addNoiseTo(orig, n);
+  ctx.putImageData(previewData, 0, 0);
+}
+
+fileInput.addEventListener('change', e=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const im = new Image();
+  im.onload = ()=>{ imgObj = im; draw(im); renderPreview(); downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled'); URL.revokeObjectURL(url); };
+  im.onerror = ()=>{ alert('Не вдалося завантажити фото'); };
+  im.src = url;
+});
+
+preview.addEventListener('dragover', ev=>{ ev.preventDefault(); preview.style.borderColor='#999'; });
+preview.addEventListener('dragleave', ()=>{ preview.style.borderColor=''; });
+preview.addEventListener('drop', ev=>{ ev.preventDefault(); preview.style.borderColor=''; const file = ev.dataTransfer.files && ev.dataTransfer.files[0]; if(file){ fileInput.files = ev.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); } });
+
+range.addEventListener('input', ()=>{ n = Number(range.value)/100; noiseLabel.textContent = Math.round(n*100) + '%'; renderPreview(); });
+
+applyBtn.addEventListener('click', ()=>{
+  if(!orig) return;
+  cur = addNoiseTo(orig, n);
+  ctx.putImageData(cur, 0, 0);
+  downloadBtn.disabled = false; downloadBtn.classList.remove('btn-disabled');
+});
+
+clearBtn.addEventListener('click', ()=>{
+  if(!orig) return;
+  cur = cloneImageData(orig);
+  ctx.putImageData(cur, 0, 0);
+  downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled');
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  const data = canvas.toDataURL('image/png');
+  const a = document.createElement('a'); a.href = data; a.download = 'noise.png'; document.body.appendChild(a); a.click(); a.remove();
+});
+
+resetBtn.addEventListener('click', ()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  imgObj = null; orig = null; cur = null; fileInput.value = ''; range.value = 20; n = 0.2; noiseLabel.textContent = '20%'; downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled'); hint.style.display = 'block';
+});
+
+// viewer + magnifier
+viewBtn.addEventListener('click', ()=>{
+  if(!cur && !orig) return;
+  const data = canvas.toDataURL('image/png');
+  viewerImg.src = data;
+  viewer.style.display = 'flex';
+  // show glass once image loaded
+  viewerImg.onload = ()=>{
+    glass.style.display = 'none';
+  };
+});
+
+function updateGlass(e){
+  const wrapRect = viewerWrap.getBoundingClientRect();
+  const imgRect = viewerImg.getBoundingClientRect();
+  const gx = 80; // glass radius
+  const zoom = 2.5;
+  const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+  const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
+  const x = clientX - imgRect.left;
+  const y = clientY - imgRect.top;
+  if(x<0 || y<0 || x>imgRect.width || y>imgRect.height){ glass.style.display='none'; return; }
+  glass.style.display = 'block';
+  const left = imgRect.left - wrapRect.left + x - gx;
+  const top = imgRect.top - wrapRect.top + y - gx;
+  glass.style.left = left + 'px';
+  glass.style.top = top + 'px';
+  glass.style.backgroundImage = `url(${viewerImg.src})`;
+  glass.style.backgroundSize = (viewerImg.naturalWidth * zoom) + 'px ' + (viewerImg.naturalHeight * zoom) + 'px';
+  const px = x / imgRect.width * viewerImg.naturalWidth;
+  const py = y / imgRect.height * viewerImg.naturalHeight;
+  const bgX = -(px * zoom - gx);
+  const bgY = -(py * zoom - gx);
+  glass.style.backgroundPosition = bgX + 'px ' + bgY + 'px';
+}
+
+viewerImg.addEventListener('mousemove', updateGlass);
+viewerImg.addEventListener('touchmove', updateGlass, {passive:true});
+viewerImg.addEventListener('mouseleave', ()=>{ glass.style.display='none'; });
+viewerImg.addEventListener('touchend', ()=>{ glass.style.display='none'; });
+
+closeViewer.addEventListener('click', ()=>{ viewer.style.display='none'; glass.style.display='none'; });
+viewer.addEventListener('click', (e)=>{ if(e.target===viewer) { viewer.style.display='none'; glass.style.display='none'; } });
+
 </script>
 </body>
 </html>
