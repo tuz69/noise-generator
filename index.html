@@ -31,6 +31,7 @@
     body.dark{background:#0f172a;color:#f1f5f9}
     body.dark .card{background:#1e293b}
     body.dark .panel{background:#334155}
+    body.dark canvas {background-color: #1e293b;}
     body.dark .filebtn{background:#1e293b;color:#f1f5f9;border:1px solid #475569}
     body.dark .btn-muted{background:#475569;color:#f1f5f9}
     /* тумблер */
@@ -127,7 +128,14 @@ closeViewer.addEventListener('click',()=>{viewer.style.display='none';glass.styl
 
 incBtn.addEventListener('click',()=>{let val=parseInt(range.value)+1;if(val>100)val=100;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview()});
 decBtn.addEventListener('click',()=>{let val=parseInt(range.value)-1;if(val<0)val=0;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview()});
-themeToggle.addEventListener('click',()=>{document.body.classList.toggle('dark');themeToggle.textContent=document.body.classList.contains('dark')?'☀️ Світла тема':'🌙 Темна тема'});
+
+// Тема з localStorage
+function setTheme(dark){
+  if(dark){document.body.classList.add('dark');themeToggle.textContent='☀️ Світла тема';localStorage.setItem('theme','dark')}
+  else{document.body.classList.remove('dark');themeToggle.textContent='🌙 Темна тема';localStorage.setItem('theme','light')}
+}
+themeToggle.addEventListener('click',()=>{setTheme(!document.body.classList.contains('dark'))});
+if(localStorage.getItem('theme')==='dark'){setTheme(true)} else {setTheme(false)}
 </script>
 </body>
 </html>
