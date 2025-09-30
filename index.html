@@ -297,6 +297,12 @@ themeToggle.addEventListener('click',()=>{
   document.body.classList.toggle('dark');
   themeToggle.textContent=document.body.classList.contains('dark')?'☀️ Світла тема':'🌙 Темна тема';
 });
+  
+  preview.addEventListener('click', () => {
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    fileInput.click();
+  }
+});
 </script>
 </body>
 </html>
