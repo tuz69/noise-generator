@@ -1,162 +1,302 @@
 <!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Накладання шуму на фото – онлайн інструмент</title>
-<meta name="description" content="Простий онлайн-сервіс для додавання шуму на фото. Регулюй інтенсивність шуму, отримуй прев’ю та завантажуй результат одразу на свій пристрій.">
-
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Накладання шуму на фото</title>
 <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<style>
+:root {
+  --primary: #4f46e5;
+  --accent: #0ea5a4;
+  --glass-light: rgba(255, 255, 255, 0.2);
+  --glass-dark: rgba(30, 41, 59, 0.5);
+  --text-light: #111;
+  --text-dark: #f1f5f9;
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  background: linear-gradient(135deg,#e0e7ff,#fef3c7);
+  color: var(--text-light);
+  transition: background 0.4s,color 0.4s;
+}
+body.dark {
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color: var(--text-dark);
+}
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--glass-light);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  transition: all 0.4s;
+}
+body.dark .theme-toggle { background: var(--glass-dark); border:1px solid rgba(255,255,255,0.2); }
 
-<!-- PNG favicon для сучасних браузерів -->
-<link rel="icon" href="icons/favicon-32x32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="icons/favicon-16x16.png" sizes="16x16" type="image/png">
+.card {
+  width:920px;
+  max-width:96%;
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:20px;
+  padding:24px;
+  border-radius: var(--radius);
+  background: var(--glass-light);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  transition: all 0.4s;
+}
+body.dark .card { background: var(--glass-dark); }
 
-<!-- Apple touch icon (для iOS / iPad) -->
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" sizes="180x180">
+.preview {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border:1px dashed rgba(255,255,255,0.3);
+  border-radius: var(--radius);
+  padding:12px;
+  min-height:420px;
+  overflow:auto;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  transition: all 0.4s;
+}
+body.dark .preview { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
 
-<!-- Safari pinned tab (SVG) -->
-<link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#4f46e5">
+canvas { max-width:100%; height:auto; border-radius:12px; background: rgba(255,255,255,0.2); transition: all 0.4s; }
+body.dark canvas { background: rgba(255,255,255,0.05); }
 
-<!-- Microsoft tile (Windows) -->
-<meta name="msapplication-TileColor" content="#4f46e5">
-<meta name="msapplication-TileImage" content="icons/mstile-150x150.png">
+.controls { display:flex; flex-direction:column; gap:16px; }
 
+.panel {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  transition: all 0.4s;
+}
+body.dark .panel { background: rgba(30,41,59,0.6); }
 
+label { font-size:14px; margin-bottom:4px; display:block; color:inherit; }
 
-  <style>
-    body{margin:0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f6f7fb;color:#111;transition:background .3s,color .3s}
-    .card{width:920px;max-width:96%;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px;transition:background .3s}
-    .preview{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed #ccc;border-radius:10px;padding:12px;min-height:420px;overflow:auto}
-    canvas{max-width:100%;height:auto;border-radius:6px;background:#fff}
-    .controls{display:flex;flex-direction:column;gap:12px}
-    .panel{padding:12px;border-radius:8px;background:#fff;transition:background .3s}
-    label{font-size:13px;margin-bottom:4px;display:block}
-    input[type=file]{display:none}
-    .filebtn{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-weight:600}
-    .slider{width:100%}
-    .btn{padding:8px 12px;border-radius:6px;border:0;cursor:pointer;font-weight:600}
-    .btn-apply{background:#4f46e5;color:#fff}
-    .btn-download{background:#0ea5a4;color:#fff}
-    .btn-muted{background:#eee}
-    .btn-disabled{opacity:.5;cursor:not-allowed}
-    /* viewer */
-    #viewer{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999}
-    .viewer-wrap{position:relative;background:#fff;padding:10px;border-radius:8px;max-width:92%;max-height:92%;overflow:hidden}
-    .viewer-wrap img{display:block;max-width:100%;max-height:80vh}
-    #glass{position:absolute;width:160px;height:160px;border-radius:50%;box-shadow:0 6px 18px rgba(0,0,0,.35);border:3px solid rgba(255,255,255,.9);pointer-events:none;display:none;background-repeat:no-repeat}
-    .viewer-close{position:absolute;right:8px;top:8px;background:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
-    .noise-buttons{display:flex;justify-content:center;gap:8px;margin-top:8px}
-    /* темна тема */
-    body.dark{background:#0f172a;color:#f1f5f9}
-    body.dark .card{background:#1e293b}
-    body.dark .panel{background:#334155}
-    body.dark canvas {background-color: #1e293b;}
-    body.dark .filebtn{background:#1e293b;color:#f1f5f9;border:1px solid #475569}
-    body.dark .btn-muted{background:#475569;color:#f1f5f9}
-    /* тумблер */
-    .theme-toggle{position:fixed;top:12px;right:12px;padding:8px 14px;border-radius:20px;background:#fff;border:1px solid #ccc;cursor:pointer;font-size:14px;transition:background .3s,color .3s}
-    body.dark .theme-toggle{background:#1e293b;color:#f1f5f9;border:1px solid #475569}
-    @media(max-width:860px){.card{grid-template-columns:1fr}}
-  </style>
+.filebtn, .btn { 
+  padding:10px 16px;
+  border-radius: var(--radius);
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.filebtn:hover, .btn:hover { transform: translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.2); }
+
+.filebtn { background: var(--glass-light); backdrop-filter: blur(8px); }
+body.dark .filebtn { background: var(--glass-dark); }
+
+.slider { width:100%; }
+
+.btn-apply { background: var(--primary); color:#fff }
+.btn-download { background: var(--accent); color:#fff }
+.btn-muted { background: rgba(255,255,255,0.2); color: inherit; }
+.btn-disabled { opacity:.5; cursor:not-allowed; }
+
+.noise-buttons { display:flex; justify-content:center; gap:8px; margin-top:8px; }
+
+#hint { font-size:13px; color:rgba(255,255,255,0.7); margin-top:12px; }
+
+#viewer {
+  position: fixed;
+  left:0; top:0; width:100%; height:100%;
+  display:none; align-items:center; justify-content:center;
+  background: rgba(0,0,0,0.7);
+  z-index:9999;
+}
+.viewer-wrap {
+  position:relative;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  padding:12px;
+  border-radius: var(--radius);
+  max-width:92%; max-height:92%;
+  overflow:hidden;
+}
+.viewer-wrap img { display:block; max-width:100%; max-height:80vh; border-radius: var(--radius); }
+#glass { position:absolute; width:160px; height:160px; border-radius:50%; box-shadow:0 6px 18px rgba(0,0,0,0.35); border:3px solid rgba(255,255,255,0.9); pointer-events:none; display:none; background-repeat:no-repeat; }
+.viewer-close { position:absolute; right:8px; top:8px; background:rgba(255,255,255,0.3); border:0; padding:6px 8px; border-radius:6px; cursor:pointer; }
+
+@media(max-width:860px){.card{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle">🌙 Темна тема</button>
-  <div class="card">
-    <div class="preview" id="preview">
-      <canvas id="canvas"></canvas>
-      <div id="hint" style="margin-top:12px;font-size:13px;color:#666">Завантажте фото</div>
+<button class="theme-toggle" id="themeToggle">🌙 Темна тема</button>
+<div class="card">
+  <div class="preview" id="preview">
+    <canvas id="canvas"></canvas>
+    <div id="hint">Завантажте фото</div>
+  </div>
+  <div class="controls">
+    <div class="panel">
+      <label>Фото</label>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+        <label class="filebtn" for="file">Обрати</label>
+        <input id="file" type="file" accept="image/*" style="display:none;">
+        <button id="reset" class="btn btn-muted">Очистити</button>
+      </div>
     </div>
-    <div class="controls">
-      <div class="panel">
-        <label>Фото</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <label class="filebtn" for="file">Обрати</label>
-          <input id="file" type="file" accept="image/*">
-          <button id="reset" class="btn btn-muted">Очистити</button>
-        </div>
+    <div class="panel">
+      <label>Шум: <span id="noiseLabel">20%</span></label>
+      <input id="noiseRange" class="slider" type="range" min="0" max="100" value="20">
+      <div class="noise-buttons">
+        <button class="btn btn-muted" id="decreaseNoise">➖</button>
+        <button class="btn btn-muted" id="increaseNoise">➕</button>
       </div>
-      <div class="panel">
-        <label>Шум: <span id="noiseLabel">20%</span></label>
-        <input id="noiseRange" class="slider" type="range" min="0" max="100" value="20">
-        <div class="noise-buttons">
-          <button class="btn btn-muted" id="decreaseNoise">➖</button>
-          <button class="btn btn-muted" id="increaseNoise">➕</button>
-        </div>
-      </div>
-      <div class="panel">
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="apply" class="btn btn-apply">Накласти</button>
-          <button id="clearNoise" class="btn btn-muted">Очистити шум</button>
-          <button id="viewBtn" class="btn">Переглянути</button>
-          <button id="download" class="btn btn-download btn-disabled" disabled>Завантажити</button>
-        </div>
+    </div>
+    <div class="panel">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="apply" class="btn btn-apply">Накласти</button>
+        <button id="clearNoise" class="btn btn-muted">Очистити шум</button>
+        <button id="viewBtn" class="btn">Переглянути</button>
+        <button id="download" class="btn btn-download btn-disabled" disabled>Завантажити</button>
       </div>
     </div>
   </div>
+</div>
 
-  <div id="viewer">
-    <div class="viewer-wrap" id="viewerWrap">
-      <button class="viewer-close" id="closeViewer">✕</button>
-      <img id="viewerImg" src="" alt=""/>
-      <div id="glass"></div>
-    </div>
+<div id="viewer">
+  <div class="viewer-wrap" id="viewerWrap">
+    <button class="viewer-close" id="closeViewer">✕</button>
+    <img id="viewerImg" src="" alt=""/>
+    <div id="glass"></div>
   </div>
+</div>
 
 <script>
-const fileInput=document.getElementById('file');
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-const range=document.getElementById('noiseRange');
-const noiseLabel=document.getElementById('noiseLabel');
-const applyBtn=document.getElementById('apply');
-const clearBtn=document.getElementById('clearNoise');
-const viewBtn=document.getElementById('viewBtn');
-const downloadBtn=document.getElementById('download');
-const resetBtn=document.getElementById('reset');
-const preview=document.getElementById('preview');
-const hint=document.getElementById('hint');
-const viewer=document.getElementById('viewer');
-const viewerImg=document.getElementById('viewerImg');
-const glass=document.getElementById('glass');
-const closeViewer=document.getElementById('closeViewer');
-const viewerWrap=document.getElementById('viewerWrap');
-const incBtn=document.getElementById('increaseNoise');
-const decBtn=document.getElementById('decreaseNoise');
-const themeToggle=document.getElementById('themeToggle');
+const fileInput = document.getElementById('file');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const range = document.getElementById('noiseRange');
+const noiseLabel = document.getElementById('noiseLabel');
+const applyBtn = document.getElementById('apply');
+const clearBtn = document.getElementById('clearNoise');
+const viewBtn = document.getElementById('viewBtn');
+const downloadBtn = document.getElementById('download');
+const resetBtn = document.getElementById('reset');
+const incBtn = document.getElementById('increaseNoise');
+const decBtn = document.getElementById('decreaseNoise');
+const themeToggle = document.getElementById('themeToggle');
+const preview = document.getElementById('preview');
+const hint = document.getElementById('hint');
 
-let imgObj=null,orig=null,cur=null,n=Number(range.value)/100;
+const viewer = document.getElementById('viewer');
+const viewerImg = document.getElementById('viewerImg');
+const glass = document.getElementById('glass');
+const closeViewer = document.getElementById('closeViewer');
+const viewerWrap = document.getElementById('viewerWrap');
+
+let imgObj=null, orig=null, cur=null, n=Number(range.value)/100;
 
 function clamp(v){return v<0?0:(v>255?255:v)}
-function cloneImageData(src){return new ImageData(new Uint8ClampedArray(src.data),src.width,src.height)}
-function draw(img){canvas.width=img.width;canvas.height=img.height;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0);orig=ctx.getImageData(0,0,canvas.width,canvas.height);cur=cloneImageData(orig);hint.style.display='none'}
-function addNoiseTo(src,strength){const out=new ImageData(new Uint8ClampedArray(src.data),src.width,src.height);const d=out.data;for(let i=0;i<d.length;i+=4){const u1=Math.random()||1e-10;const u2=Math.random();const sRand=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);const amp=80*strength;const no=sRand*amp;d[i]=clamp(d[i]+no);d[i+1]=clamp(d[i+1]+no);d[i+2]=clamp(d[i+2]+no)}return out}
-function renderPreview(){if(!orig)return;const previewData=addNoiseTo(orig,n);ctx.putImageData(previewData,0,0)}
+function cloneImageData(src){return new ImageData(new Uint8ClampedArray(src.data), src.width, src.height)}
 
-fileInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const url=URL.createObjectURL(file);const im=new Image();im.onload=()=>{imgObj=im;draw(im);renderPreview();downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');URL.revokeObjectURL(url)};im.onerror=()=>{alert('Не вдалося завантажити фото')};im.src=url});
-preview.addEventListener('dragover',ev=>{ev.preventDefault();preview.style.borderColor='#999'});preview.addEventListener('dragleave',()=>{preview.style.borderColor=''});preview.addEventListener('drop',ev=>{ev.preventDefault();preview.style.borderColor='';const file=ev.dataTransfer.files&&ev.dataTransfer.files[0];if(file){fileInput.files=ev.dataTransfer.files;fileInput.dispatchEvent(new Event('change'))}});
-range.addEventListener('input',()=>{n=Number(range.value)/100;noiseLabel.textContent=Math.round(n*100)+'%';renderPreview()});
-applyBtn.addEventListener('click',()=>{if(!orig)return;cur=addNoiseTo(orig,n);ctx.putImageData(cur,0,0);downloadBtn.disabled=false;downloadBtn.classList.remove('btn-disabled')});
-clearBtn.addEventListener('click',()=>{if(!orig)return;cur=cloneImageData(orig);ctx.putImageData(cur,0,0);downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled')});
-downloadBtn.addEventListener('click',()=>{const data=canvas.toDataURL('image/png');const a=document.createElement('a');a.href=data;a.download='noise.png';document.body.appendChild(a);a.click();a.remove()});
-resetBtn.addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);imgObj=null;orig=null;cur=null;fileInput.value='';range.value=20;n=0.2;noiseLabel.textContent='20%';downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');hint.style.display='block'});
-viewBtn.addEventListener('click',()=>{if(!cur&&!orig)return;const data=canvas.toDataURL('image/png');viewerImg.src=data;viewer.style.display='flex';viewerImg.onload=()=>{glass.style.display='none'}});
-
-function updateGlass(e){const wrapRect=viewerWrap.getBoundingClientRect();const imgRect=viewerImg.getBoundingClientRect();const gx=80;const zoom=2.5;const clientX=(e.touches?e.touches[0].clientX:e.clientX);const clientY=(e.touches?e.touches[0].clientY:e.clientY);const x=clientX-imgRect.left;const y=clientY-imgRect.top;if(x<0||y<0||x>imgRect.width||y>imgRect.height){glass.style.display='none';return}glass.style.display='block';const left=imgRect.left-wrapRect.left+x-gx;const top=imgRect.top-wrapRect.top+y-gx;glass.style.left=left+'px';glass.style.top=top+'px';glass.style.backgroundImage=`url(${viewerImg.src})`;glass.style.backgroundSize=(viewerImg.naturalWidth*zoom)+'px '+(viewerImg.naturalHeight*zoom)+'px';const px=x/imgRect.width*viewerImg.naturalWidth;const py=y/imgRect.height*viewerImg.naturalHeight;const bgX=-(px*zoom-gx);const bgY=-(py*zoom-gx);glass.style.backgroundPosition=bgX+'px '+bgY+'px'}
-viewerImg.addEventListener('mousemove',updateGlass);viewerImg.addEventListener('touchmove',updateGlass,{passive:true});viewerImg.addEventListener('mouseleave',()=>{glass.style.display='none'});viewerImg.addEventListener('touchend',()=>{glass.style.display='none'});
-closeViewer.addEventListener('click',()=>{viewer.style.display='none';glass.style.display='none'});viewer.addEventListener('click',e=>{if(e.target===viewer){viewer.style.display='none';glass.style.display='none'}});
-
-incBtn.addEventListener('click',()=>{let val=parseInt(range.value)+1;if(val>100)val=100;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview()});
-decBtn.addEventListener('click',()=>{let val=parseInt(range.value)-1;if(val<0)val=0;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview()});
-
-// Тема з localStorage
-function setTheme(dark){
-  if(dark){document.body.classList.add('dark');themeToggle.textContent='☀️ Світла тема';localStorage.setItem('theme','dark')}
-  else{document.body.classList.remove('dark');themeToggle.textContent='🌙 Темна тема';localStorage.setItem('theme','light')}
+function draw(img){
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0);
+  orig = ctx.getImageData(0,0,canvas.width,canvas.height);
+  cur = cloneImageData(orig);
+  hint.style.display='none';
 }
-themeToggle.addEventListener('click',()=>{setTheme(!document.body.classList.contains('dark'))});
-if(localStorage.getItem('theme')==='dark'){setTheme(true)} else {setTheme(false)}
+
+function addNoiseTo(src,strength){
+  const out=new ImageData(new Uint8ClampedArray(src.data),src.width,src.height);
+  const d=out.data;
+  for(let i=0;i<d.length;i+=4){
+    const u1=Math.random()||1e-10;
+    const u2=Math.random();
+    const sRand=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+    const amp=80*strength;
+    const no=sRand*amp;
+    d[i]=clamp(d[i]+no);
+    d[i+1]=clamp(d[i+1]+no);
+    d[i+2]=clamp(d[i+2]+no);
+  }
+  return out;
+}
+
+function renderPreview(){ if(!orig) return; const previewData=addNoiseTo(orig,n); ctx.putImageData(previewData,0,0); }
+
+fileInput.addEventListener('change',e=>{
+  const file=e.target.files && e.target.files[0];
+  if(!file) return;
+  const url=URL.createObjectURL(file);
+  const im=new Image();
+  im.onload=()=>{imgObj=im;draw(im);renderPreview(); downloadBtn.disabled=true; downloadBtn.classList.add('btn-disabled'); URL.revokeObjectURL(url);}
+  im.onerror=()=>{alert('Не вдалося завантажити фото');};
+  im.src=url;
+});
+
+preview.addEventListener('dragover',ev=>{ev.preventDefault();preview.style.borderColor='#999';});
+preview.addEventListener('dragleave',()=>{preview.style.borderColor='';});
+preview.addEventListener('drop',ev=>{ev.preventDefault();preview.style.borderColor='';const file=ev.dataTransfer.files && ev.dataTransfer.files[0];if(file){fileInput.files=ev.dataTransfer.files;fileInput.dispatchEvent(new Event('change'));}});
+
+range.addEventListener('input',()=>{n=Number(range.value)/100;noiseLabel.textContent=Math.round(n*100)+'%';renderPreview();});
+incBtn.addEventListener('click',()=>{let val=parseInt(range.value)+1;if(val>100) val=100;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview();});
+decBtn.addEventListener('click',()=>{let val=parseInt(range.value)-1;if(val<0) val=0;range.value=val;n=val/100;noiseLabel.textContent=val+'%';renderPreview();});
+
+applyBtn.addEventListener('click',()=>{if(!orig) return;cur=addNoiseTo(orig,n);ctx.putImageData(cur,0,0);downloadBtn.disabled=false;downloadBtn.classList.remove('btn-disabled');});
+clearBtn.addEventListener('click',()=>{if(!orig) return;cur=cloneImageData(orig);ctx.putImageData(cur,0,0);downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');});
+downloadBtn.addEventListener('click',()=>{const data=canvas.toDataURL('image/png');const a=document.createElement('a');a.href=data;a.download='noise.png';document.body.appendChild(a);a.click();a.remove();});
+resetBtn.addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);imgObj=null;orig=null;cur=null;fileInput.value='';range.value=20;n=0.2;noiseLabel.textContent='20%';downloadBtn.disabled=true;downloadBtn.classList.add('btn-disabled');hint.style.display='block';});
+
+viewBtn.addEventListener('click',()=>{if(!cur && !orig) return;viewerImg.src=canvas.toDataURL('image/png');viewer.style.display='flex';viewerImg.onload=()=>{glass.style.display='none';}});
+function updateGlass(e){
+  const wrapRect=viewerWrap.getBoundingClientRect();
+  const imgRect=viewerImg.getBoundingClientRect();
+  const gx=80;
+  const zoom=2.5;
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  const x=clientX-imgRect.left;
+  const y=clientY-imgRect.top;
+  if(x<0||y<0||x>imgRect.width||y>imgRect.height){glass.style.display='none';return;}
+  glass.style.display='block';
+  const left=imgRect.left-wrapRect.left+x-gx;
+  const top=imgRect.top-wrapRect.top+y-gx;
+  glass.style.left=left+'px';
+  glass.style.top=top+'px';
+  glass.style.backgroundImage=`url(${viewerImg.src})`;
+  glass.style.backgroundSize=(viewerImg.naturalWidth*zoom)+'px '+(viewerImg.naturalHeight*zoom)+'px';
+  const px=x/imgRect.width*viewerImg.naturalWidth;
+  const py=y/imgRect.height*viewerImg.naturalHeight;
+  const bgX=-(px*zoom-gx);
+  const bgY=-(py*zoom-gx);
+  glass.style.backgroundPosition=bgX+'px '+bgY+'px';
+}
+viewerImg.addEventListener('mousemove',updateGlass);
+viewerImg.addEventListener('touchmove',updateGlass,{passive:true});
+viewerImg.addEventListener('mouseleave',()=>{glass.style.display='none';});
+viewerImg.addEventListener('touchend',()=>{glass.style.display='none';});
+closeViewer.addEventListener('click',()=>{viewer.style.display='none';glass.style.display='none';});
+viewer.addEventListener('click',e=>{if(e.target===viewer){viewer.style.display='none';glass.style.display='none';}});
+
+themeToggle.addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  themeToggle.textContent=document.body.classList.contains('dark')?'☀️ Світла тема':'🌙 Темна тема';
+});
 </script>
 </body>
 </html>
