@@ -1,10 +1,30 @@
 <!doctype html>
 <html lang="uk">
 <head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DKWMNDNKBG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DKWMNDNKBG');
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Накладання шуму на фото</title>
+<title>Накладання шуму на фото – онлайн інструмент</title>
+<meta name="description" content="Простий онлайн-сервіс для додавання шуму на фото. Регулюй інтенсивність шуму, отримуй прев’ю та завантажуй результат одразу на свій пристрій.">
+<meta name="keywords" content="додати шум на фото, онлайн шум фото, редагування фото, шум, онлайн редактор, фото інструмент, накладення шуму">
+
+<!-- Favicon -->
 <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<link rel="icon" href="icons/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16x16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" sizes="180x180">
+<link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#4f46e5">
+<meta name="msapplication-TileColor" content="#4f46e5">
+<meta name="msapplication-TileImage" content="icons/mstile-150x150.png">
+
 <style>
 :root {
   --primary: #4f46e5;
@@ -115,7 +135,7 @@ body.dark .filebtn { background: var(--glass-dark); }
 
 .noise-buttons { display:flex; justify-content:center; gap:8px; margin-top:8px; }
 
-#hint { font-size:13px; color:rgba(255,255,255,0.7); margin-top:12px; }
+#hint { font-size:13px; color:rgba(0,0,0,100); margin-top:12px; }
 
 #viewer {
   position: fixed;
@@ -296,6 +316,12 @@ viewer.addEventListener('click',e=>{if(e.target===viewer){viewer.style.display='
 themeToggle.addEventListener('click',()=>{
   document.body.classList.toggle('dark');
   themeToggle.textContent=document.body.classList.contains('dark')?'☀️ Світла тема':'🌙 Темна тема';
+});
+  
+  preview.addEventListener('click', () => {
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    fileInput.click();
+  }
 });
 </script>
 </body>
