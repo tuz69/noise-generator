@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tuz69.github.io/noise-generator/sitemap.xml
