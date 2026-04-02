@@ -152,11 +152,11 @@ select:focus-visible,
 
 .hero-copy {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent), var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
-  padding: clamp(24px, 5vw, 56px);
+  padding: clamp(22px, 4vw, 42px);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
@@ -188,16 +188,35 @@ select:focus-visible,
 }
 
 .hero h1 {
-  max-width: 760px;
-  font-size: clamp(2.7rem, 7vw, 5.6rem);
+  max-width: 680px;
+  font-size: clamp(2rem, 4.8vw, 3.7rem);
 }
 
 .lead {
-  max-width: 760px;
+  max-width: 680px;
   margin: 0;
-  font-size: clamp(1rem, 1.6vw, 1.18rem);
-  line-height: 1.72;
+  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
+  line-height: 1.65;
   color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hero-cta {
+  width: auto;
+  min-width: 220px;
+}
+
+.hero-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
 }
 
 .hero-stats {
@@ -207,7 +226,7 @@ select:focus-visible,
 }
 
 .stat {
-  padding: 18px;
+  padding: 16px;
   border-radius: var(--radius-md);
   background: var(--panel-strong);
   border: 1px solid var(--line);
@@ -215,14 +234,14 @@ select:focus-visible,
 
 .stat strong {
   display: block;
-  margin-bottom: 8px;
-  font-size: 1rem;
+  margin-bottom: 6px;
+  font-size: 0.98rem;
 }
 
 .stat span {
   color: var(--muted);
-  font-size: 0.93rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .layout {
@@ -671,6 +690,14 @@ input[type="range"] {
     margin-bottom: 24px;
   }
 
+  .hero-actions {
+    align-items: stretch;
+  }
+
+  .hero-cta {
+    width: 100%;
+  }
+
   .file-row,
   .action-grid,
   .step-row {
@@ -688,6 +715,6 @@ input[type="range"] {
   }
 
   .hero h1 {
-    font-size: clamp(2.2rem, 12vw, 3.5rem);
+    font-size: clamp(1.8rem, 9vw, 2.7rem);
   }
 }
