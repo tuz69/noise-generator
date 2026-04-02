@@ -8,6 +8,7 @@ const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const range = document.getElementById("noiseRange");
 const noiseLabel = document.getElementById("noiseLabel");
 const applyBtn = document.getElementById("apply");
+const zoomBtn = document.getElementById("zoom");
 const downloadBtn = document.getElementById("download");
 const resetBtn = document.getElementById("reset");
 const themeToggle = document.getElementById("themeToggle");
@@ -16,6 +17,9 @@ const hint = document.getElementById("hint");
 const statusLine = document.getElementById("status");
 const fileMeta = document.getElementById("fileMeta");
 const noiseModeSelect = document.getElementById("noiseMode");
+const viewer = document.getElementById("viewer");
+const viewerImg = document.getElementById("viewerImg");
+const closeViewer = document.getElementById("closeViewer");
 
 const workingCanvas = document.createElement("canvas");
 const workingCtx = workingCanvas.getContext("2d", { willReadFrequently: true });
@@ -79,6 +83,7 @@ function updateNoiseLabel() {
 function updateButtons() {
   const hasImage = Boolean(state.originalData);
   applyBtn.disabled = !state.previewData;
+  zoomBtn.disabled = !hasImage;
   downloadBtn.disabled = !state.appliedData;
 }
 
@@ -301,6 +306,20 @@ function downloadCurrentImage() {
   }, "image/png");
 }
 
+function openViewer() {
+  if (!state.originalData) {
+    return;
+  }
+  viewerImg.src = canvas.toDataURL("image/png");
+  viewer.style.display = "flex";
+  viewer.setAttribute("aria-hidden", "false");
+}
+
+function closeViewerModal() {
+  viewer.style.display = "none";
+  viewer.setAttribute("aria-hidden", "true");
+}
+
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files && event.target.files[0];
   handleFile(file);
@@ -357,7 +376,19 @@ applyBtn.addEventListener("click", () => {
 });
 
 downloadBtn.addEventListener("click", downloadCurrentImage);
+zoomBtn.addEventListener("click", openViewer);
 resetBtn.addEventListener("click", resetAll);
+closeViewer.addEventListener("click", closeViewerModal);
+viewer.addEventListener("click", (event) => {
+  if (event.target === viewer) {
+    closeViewerModal();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && viewer.style.display === "flex") {
+    closeViewerModal();
+  }
+});
 
 themeToggle.addEventListener("click", () => {
   const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";

@@ -363,7 +363,7 @@ body[data-theme="dark"] canvas {
 }
 
 .action-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .btn,
@@ -501,6 +501,47 @@ input[type="range"] {
 
 [hidden] {
   display: none !important;
+}
+
+#viewer {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.84);
+  z-index: 9999;
+}
+
+.viewer-wrap {
+  position: relative;
+  width: min(100%, 1180px);
+  max-height: 92vh;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(8, 14, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.viewer-wrap img {
+  display: block;
+  width: 100%;
+  max-height: calc(92vh - 36px);
+  object-fit: contain;
+  border-radius: 16px;
+}
+
+.viewer-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 @media (max-width: 960px) {

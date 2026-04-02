@@ -178,6 +178,7 @@
               <h3>Дії</h3>
               <div class="action-grid">
                 <button id="apply" class="btn btn-primary" type="button" disabled>Застосувати</button>
+                <button id="zoom" class="btn btn-muted" type="button" disabled>Приблизити</button>
                 <button id="download" class="btn btn-accent" type="button" disabled>Завантажити PNG</button>
               </div>
             </section>
@@ -216,6 +217,13 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <div id="viewer" aria-hidden="true">
+    <div class="viewer-wrap">
+      <button id="closeViewer" class="viewer-close" type="button" aria-label="Закрити перегляд">×</button>
+      <img id="viewerImg" src="" alt="Збільшений перегляд фото">
+    </div>
   </div>
 
   <script src="app.js"></script>
