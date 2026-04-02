@@ -110,27 +110,8 @@
       </div>
 
       <div class="hero-copy">
-        <span class="eyebrow">Онлайн noise generator</span>
         <h1>Додати шум на фото онлайн</h1>
         <p class="lead">Завантаж фото, налаштуй силу та тип зерна, переглянь результат і збережи PNG. Усе працює локально в браузері без реєстрації.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary hero-cta" href="#editorTitle">Почати редагування</a>
-          <p class="hero-note">JPG, PNG, WEBP · локальна обробка · без передачі фото на сервер</p>
-        </div>
-        <div class="hero-stats">
-          <div class="stat">
-            <strong>1. Завантаж фото</strong>
-            <span>Перетягни файл або обери його з комп'ютера прямо у редакторі.</span>
-          </div>
-          <div class="stat">
-            <strong>2. Налаштуй зерно</strong>
-            <span>Обери інтенсивність, тип шуму та при потребі згенеруй новий патерн.</span>
-          </div>
-          <div class="stat">
-            <strong>3. Завантаж результат</strong>
-            <span>Прев'ю збігається з фінальним файлом, тому результат передбачуваний.</span>
-          </div>
-        </div>
       </div>
     </header>
 
@@ -138,10 +119,9 @@
       <section class="workspace-card" aria-labelledby="editorTitle">
         <div class="workspace-header">
           <div>
-            <p class="panel-kicker">Редактор</p>
             <h2 id="editorTitle">Підготовка шуму для фото</h2>
           </div>
-          <p class="section-copy">Підходить для ефекту film grain, стилізації цифрових знімків та швидких тестів перед публікацією.</p>
+          <p class="section-copy">JPG, PNG, WEBP. Обробка працює локально в браузері.</p>
         </div>
 
         <div class="workspace-grid">
@@ -168,7 +148,7 @@
           <aside class="controls">
             <section class="panel">
               <h3>Файл</h3>
-              <p class="panel-note">Великі зображення можуть бути автоматично зменшені до 2560 px по довгій стороні для швидшої обробки.</p>
+              <p class="panel-note">Великі зображення можуть бути автоматично зменшені для швидшої обробки.</p>
               <div class="file-row">
                 <label class="filebtn" for="file">Обрати фото</label>
                 <button id="reset" class="btn btn-muted" type="button">Скинути</button>
@@ -184,11 +164,6 @@
                 <span>М'яко</span>
                 <span>Виразно</span>
               </div>
-              <div class="step-row">
-                <button class="btn btn-muted" id="decreaseNoise" type="button" aria-label="Зменшити шум">Менше</button>
-                <button class="btn btn-muted" id="rerollNoise" type="button">Нове зерно</button>
-                <button class="btn btn-muted" id="increaseNoise" type="button" aria-label="Збільшити шум">Більше</button>
-              </div>
 
               <label class="control-label control-spacing" for="noiseMode">Тип зерна</label>
               <select id="noiseMode">
@@ -200,50 +175,19 @@
 
             <section class="panel">
               <h3>Дії</h3>
-              <p class="panel-note">Коли прев'ю влаштовує, застосуй його і підготуй файл до завантаження.</p>
               <div class="action-grid">
                 <button id="apply" class="btn btn-primary" type="button" disabled>Застосувати</button>
-                <button id="clearNoise" class="btn btn-muted" type="button" disabled>Очистити шум</button>
-                <button id="viewBtn" class="btn btn-ghost" type="button" disabled>Відкрити крупно</button>
                 <button id="download" class="btn btn-accent" type="button" disabled>Завантажити PNG</button>
               </div>
-            </section>
-
-            <section class="panel">
-              <h3>Що покращено</h3>
-              <ul class="micro-list">
-                <li>Прев'ю та фінальний файл збігаються, тому результат став передбачуваним.</li>
-                <li>Великі фото обробляються стабільніше завдяки автоматичній оптимізації розміру.</li>
-                <li>Додані типи шуму, збереження теми, краща структура сторінки та SEO-розмітка.</li>
-              </ul>
             </section>
           </aside>
         </div>
       </section>
 
-      <section class="info-grid" aria-label="Переваги сервісу">
-        <article class="benefit-card">
-          <strong>Швидко</strong>
-          <h3>Оновлення прев'ю без зайвих кроків</h3>
-          <p>Слайдер та тип зерна оновлюють зображення майже миттєво, тому легко знайти баланс між м'яким grain і агресивним digital noise.</p>
-        </article>
-        <article class="benefit-card">
-          <strong>Зручно</strong>
-          <h3>Інтерфейс, який не відволікає</h3>
-          <p>Новий макет краще працює на ноутбуках і телефонах: важливі дії видно одразу, а другорядна інформація винесена в окремі блоки.</p>
-        </article>
-        <article class="benefit-card">
-          <strong>SEO</strong>
-          <h3>Сторінка краще підготовлена до індексації</h3>
-          <p>Додані canonical, Open Graph, Twitter Card, schema.org та більш змістовні секції з описом функцій і відповідями на часті питання.</p>
-        </article>
-      </section>
-
       <div class="content-grid">
         <section class="section-card" aria-labelledby="howToTitle">
           <p class="panel-kicker">Як працює</p>
-          <h2 id="howToTitle">Три кроки до готового результату</h2>
-          <p class="section-copy">Інструмент створений для швидкої стилізації фото без Photoshop чи складних вебредакторів.</p>
+          <h2 id="howToTitle">Як додати шум на фото</h2>
           <ol>
             <li>Завантаж фото з комп'ютера або просто перетягни його на полотно.</li>
             <li>Налаштуй силу шуму, обери тип зерна та при потребі згенеруй новий малюнок шуму.</li>
@@ -271,16 +215,6 @@
         </section>
       </div>
     </main>
-
-    <p class="footer-copy">Noise Generator допомагає швидко додати зерно, шум або film grain на фото онлайн без важких редакторів.</p>
-  </div>
-
-  <div id="viewer" aria-hidden="true">
-    <div class="viewer-wrap" id="viewerWrap">
-      <button class="viewer-close" id="closeViewer" type="button" aria-label="Закрити перегляд">×</button>
-      <img id="viewerImg" src="" alt="Збільшений перегляд результату">
-      <div id="glass"></div>
-    </div>
   </div>
 
   <script src="app.js"></script>

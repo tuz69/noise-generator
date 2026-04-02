@@ -8,25 +8,14 @@ const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const range = document.getElementById("noiseRange");
 const noiseLabel = document.getElementById("noiseLabel");
 const applyBtn = document.getElementById("apply");
-const clearBtn = document.getElementById("clearNoise");
-const viewBtn = document.getElementById("viewBtn");
 const downloadBtn = document.getElementById("download");
 const resetBtn = document.getElementById("reset");
-const incBtn = document.getElementById("increaseNoise");
-const decBtn = document.getElementById("decreaseNoise");
-const rerollBtn = document.getElementById("rerollNoise");
 const themeToggle = document.getElementById("themeToggle");
 const preview = document.getElementById("preview");
 const hint = document.getElementById("hint");
 const statusLine = document.getElementById("status");
 const fileMeta = document.getElementById("fileMeta");
 const noiseModeSelect = document.getElementById("noiseMode");
-
-const viewer = document.getElementById("viewer");
-const viewerImg = document.getElementById("viewerImg");
-const glass = document.getElementById("glass");
-const closeViewer = document.getElementById("closeViewer");
-const viewerWrap = document.getElementById("viewerWrap");
 
 const workingCanvas = document.createElement("canvas");
 const workingCtx = workingCanvas.getContext("2d", { willReadFrequently: true });
@@ -90,8 +79,6 @@ function updateNoiseLabel() {
 function updateButtons() {
   const hasImage = Boolean(state.originalData);
   applyBtn.disabled = !state.previewData;
-  clearBtn.disabled = !hasImage;
-  viewBtn.disabled = !hasImage;
   downloadBtn.disabled = !state.appliedData;
 }
 
@@ -300,49 +287,6 @@ function downloadCurrentImage() {
   }, "image/png");
 }
 
-function openViewer() {
-  if (!state.originalData) {
-    return;
-  }
-  viewerImg.src = canvas.toDataURL("image/png");
-  viewer.style.display = "flex";
-  viewer.setAttribute("aria-hidden", "false");
-  glass.style.display = "none";
-}
-
-function closeViewerModal() {
-  viewer.style.display = "none";
-  viewer.setAttribute("aria-hidden", "true");
-  glass.style.display = "none";
-}
-
-function updateGlass(event) {
-  const wrapRect = viewerWrap.getBoundingClientRect();
-  const imgRect = viewerImg.getBoundingClientRect();
-  const radius = 85;
-  const zoom = 2.6;
-  const pointer = event.touches ? event.touches[0] : event;
-  const x = pointer.clientX - imgRect.left;
-  const y = pointer.clientY - imgRect.top;
-
-  if (x < 0 || y < 0 || x > imgRect.width || y > imgRect.height) {
-    glass.style.display = "none";
-    return;
-  }
-
-  const left = imgRect.left - wrapRect.left + x - radius;
-  const top = imgRect.top - wrapRect.top + y - radius;
-  const px = (x / imgRect.width) * viewerImg.naturalWidth;
-  const py = (y / imgRect.height) * viewerImg.naturalHeight;
-
-  glass.style.display = "block";
-  glass.style.left = left + "px";
-  glass.style.top = top + "px";
-  glass.style.backgroundImage = "url(" + viewerImg.src + ")";
-  glass.style.backgroundSize = (viewerImg.naturalWidth * zoom) + "px " + (viewerImg.naturalHeight * zoom) + "px";
-  glass.style.backgroundPosition = (-(px * zoom - radius)) + "px " + (-(py * zoom - radius)) + "px";
-}
-
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files && event.target.files[0];
   handleFile(file);
@@ -388,30 +332,6 @@ noiseModeSelect.addEventListener("change", () => {
   schedulePreview("Змінюю характер зерна...");
 });
 
-incBtn.addEventListener("click", () => {
-  const nextValue = Math.min(100, Number(range.value) + 2);
-  range.value = String(nextValue);
-  state.noiseStrength = nextValue / 100;
-  updateNoiseLabel();
-  schedulePreview("Збільшую шум...");
-});
-
-decBtn.addEventListener("click", () => {
-  const nextValue = Math.max(0, Number(range.value) - 2);
-  range.value = String(nextValue);
-  state.noiseStrength = nextValue / 100;
-  updateNoiseLabel();
-  schedulePreview("Зменшую шум...");
-});
-
-rerollBtn.addEventListener("click", () => {
-  if (!state.originalData) {
-    return;
-  }
-  state.seed = randomSeed();
-  schedulePreview("Генерую новий малюнок зерна...");
-});
-
 applyBtn.addEventListener("click", () => {
   if (!state.previewData) {
     return;
@@ -422,41 +342,8 @@ applyBtn.addEventListener("click", () => {
   setStatus("Шум застосовано. Файл готовий до завантаження.");
 });
 
-clearBtn.addEventListener("click", () => {
-  if (!state.originalData) {
-    return;
-  }
-  state.previewData = null;
-  state.appliedData = null;
-  drawData(state.originalData);
-  updateButtons();
-  setStatus("Шум очищено. Зміни параметри, щоб побачити нове прев'ю.");
-});
-
 downloadBtn.addEventListener("click", downloadCurrentImage);
 resetBtn.addEventListener("click", resetAll);
-viewBtn.addEventListener("click", openViewer);
-closeViewer.addEventListener("click", closeViewerModal);
-viewer.addEventListener("click", (event) => {
-  if (event.target === viewer) {
-    closeViewerModal();
-  }
-});
-
-viewerImg.addEventListener("mousemove", updateGlass);
-viewerImg.addEventListener("touchmove", updateGlass, { passive: true });
-viewerImg.addEventListener("mouseleave", () => {
-  glass.style.display = "none";
-});
-viewerImg.addEventListener("touchend", () => {
-  glass.style.display = "none";
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && viewer.style.display === "flex") {
-    closeViewerModal();
-  }
-});
 
 themeToggle.addEventListener("click", () => {
   const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
