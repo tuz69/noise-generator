@@ -135,6 +135,12 @@ function grainValue(x, y, seed, salt) {
   return ((a + b + c) / 1.5) - 1;
 }
 
+function gaussianValue(x, y, seed, salt) {
+  const u1 = Math.max(randomUnit(x, y, seed, salt), 1e-10);
+  const u2 = randomUnit(x, y, seed, salt + 1);
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
 function applyNoise(source, strength, seed, mode) {
   if (!strength) {
     return cloneImageData(source);
@@ -147,6 +153,14 @@ function applyNoise(source, strength, seed, mode) {
   for (let y = 0; y < source.height; y += 1) {
     for (let x = 0; x < source.width; x += 1) {
       const index = (y * source.width + x) * 4;
+
+      if (mode === "standart") {
+        const standardNoise = gaussianValue(x, y, seed, 7) * (80 * strength);
+        data[index] = clamp(data[index] + standardNoise);
+        data[index + 1] = clamp(data[index + 1] + standardNoise);
+        data[index + 2] = clamp(data[index + 2] + standardNoise);
+        continue;
+      }
 
       if (mode === "rgb") {
         const rNoise = grainValue(x, y, seed, 3) * amplitude;
@@ -252,7 +266,7 @@ function resetAll() {
   state.metaLabel = "";
   range.value = "28";
   state.noiseStrength = Number(range.value) / 100;
-  noiseModeSelect.value = "mono";
+  noiseModeSelect.value = "standart";
   state.noiseMode = noiseModeSelect.value;
   updateNoiseLabel();
   updateFileMeta("");
