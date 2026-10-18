@@ -178,7 +178,7 @@ select:focus-visible,
 }
 
 .lead {
-  max-width: 620px;
+  max-width: 700px;
   margin: 0;
   font-size: 1rem;
   line-height: 1.55;
@@ -221,14 +221,22 @@ select:focus-visible,
 .benefit-card p,
 .file-meta,
 .empty-copy,
-.footer-copy {
+.footer-copy,
+.batch-progress {
   color: var(--muted);
   line-height: 1.65;
+}
+
+.section-copy {
+  max-width: 320px;
+  margin: 0;
+  text-align: right;
 }
 
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.9fr);
+  align-items: start;
   gap: 22px;
   padding: 22px;
 }
@@ -237,6 +245,10 @@ select:focus-visible,
 .controls {
   display: grid;
   gap: 18px;
+}
+
+.controls {
+  align-content: start;
 }
 
 .preview-toolbar {
@@ -258,6 +270,12 @@ select:focus-visible,
 .workspace-header h2,
 .preview-toolbar h2 {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.file-meta {
+  max-width: 300px;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .preview-surface {
@@ -352,17 +370,31 @@ body[data-theme="dark"] canvas {
   margin-top: 18px;
 }
 
+.export-hint {
+  margin-top: 14px;
+}
+
+.export-meta {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 .file-row,
-.action-grid {
+.action-grid,
+.batch-actions {
   display: grid;
   gap: 12px;
 }
 
-.file-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.action-grid {
+.file-row,
+.action-grid,
+.batch-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -433,6 +465,17 @@ body[data-theme="dark"] select option {
   box-shadow: 0 14px 30px rgba(8, 145, 178, 0.2);
 }
 
+.btn-batch {
+  margin-top: 12px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+body[data-theme="dark"] .btn-batch {
+  background: var(--accent);
+}
+
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -447,6 +490,13 @@ body[data-theme="dark"] select option {
   margin-top: 8px;
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.noise-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
 }
 
 input[type="range"] {
@@ -465,6 +515,70 @@ input[type="range"] {
   color: var(--muted);
   display: grid;
   gap: 10px;
+}
+
+.batch-list {
+  display: grid;
+  gap: 8px;
+  max-height: 170px;
+  overflow: auto;
+  margin-top: 14px;
+  padding-right: 4px;
+}
+
+.batch-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.035);
+  color: var(--text);
+  text-align: left;
+}
+
+body[data-theme="dark"] .batch-item {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.batch-item.active {
+  border-color: rgba(8, 145, 178, 0.5);
+  background: var(--accent-soft);
+}
+
+.batch-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.batch-index {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(8, 145, 178, 0.12);
+  color: var(--accent-2);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.batch-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-progress {
+  min-height: 22px;
+  margin: 10px 0 0;
+  font-size: 0.9rem;
 }
 
 .content-grid {
@@ -560,6 +674,12 @@ input[type="range"] {
     flex-direction: column;
   }
 
+  .section-copy,
+  .file-meta {
+    max-width: none;
+    text-align: left;
+  }
+
   .preview-surface {
     height: clamp(300px, 56vh, 560px);
   }
@@ -575,7 +695,9 @@ input[type="range"] {
   }
 
   .file-row,
-  .action-grid {
+  .action-grid,
+  .batch-actions,
+  .noise-buttons {
     grid-template-columns: 1fr;
   }
 
