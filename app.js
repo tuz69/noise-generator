@@ -1,5 +1,6 @@
 const MAX_DIMENSION = 2560;
 const PREVIEW_DELAY = 70;
+const EXPORT_DELAY = 160;
 const THEME_KEY = "noise-generator-theme";
 const NOISE_VALUE_KEY = "noise-generator-noise-value";
 
@@ -29,6 +30,11 @@ const downloadBatchBtn = document.getElementById("downloadBatch");
 const viewer = document.getElementById("viewer");
 const viewerImg = document.getElementById("viewerImg");
 const closeViewer = document.getElementById("closeViewer");
+const exportFormat = document.getElementById("exportFormat");
+const exportQuality = document.getElementById("exportQuality");
+const qualityLabel = document.getElementById("qualityLabel");
+const exportHint = document.getElementById("exportHint");
+const exportMeta = document.getElementById("exportMeta");
 
 const workingCanvas = document.createElement("canvas");
 const workingCtx = workingCanvas.getContext("2d", { willReadFrequently: true });
@@ -46,10 +52,13 @@ const state = {
   photos: [],
   activeIndex: -1,
   loadId: 0,
+  exportId: 0,
+  encodedResult: null,
   isProcessingBatch: false
 };
 
 let previewTimer = null;
+let exportTimer = null;
 
 function clamp(value) {
   return value < 0 ? 0 : (value > 255 ? 255 : value);
@@ -135,6 +144,9 @@ function updateNoiseLabel() {
 }
 
 function setNoiseValue(value, statusMessage) {
+  if (state.isProcessingBatch) {
+    return;
+  }
   const nextValue = clampNoiseValue(value);
   range.value = String(nextValue);
   state.noiseStrength = nextValue / 100;
@@ -146,12 +158,111 @@ function setNoiseValue(value, statusMessage) {
 function updateButtons() {
   const hasImage = Boolean(state.originalData);
   const hasBatch = state.photos.length > 1;
-  applyBtn.disabled = !state.previewData;
+  const busy = state.isProcessingBatch;
+  applyBtn.disabled = !state.previewData || busy;
   zoomBtn.disabled = !hasImage;
-  downloadBtn.disabled = !state.appliedData;
-  prevPhotoBtn.disabled = !hasBatch || state.isProcessingBatch || state.activeIndex <= 0;
-  nextPhotoBtn.disabled = !hasBatch || state.isProcessingBatch || state.activeIndex < 0 || state.activeIndex >= state.photos.length - 1;
-  downloadBatchBtn.disabled = !hasBatch || state.isProcessingBatch;
+  downloadBtn.disabled = !state.encodedResult || busy;
+  fileInput.disabled = busy;
+  range.disabled = busy;
+  incBtn.disabled = busy;
+  decBtn.disabled = busy;
+  resetBtn.disabled = busy;
+  exportFormat.disabled = busy;
+  exportQuality.disabled = busy || exportFormat.value === "image/png";
+  preview.setAttribute("aria-disabled", String(busy));
+  prevPhotoBtn.disabled = !hasBatch || busy || state.activeIndex <= 0;
+  nextPhotoBtn.disabled = !hasBatch || busy || state.activeIndex < 0 || state.activeIndex >= state.photos.length - 1;
+  downloadBatchBtn.disabled = !hasBatch || busy;
+}
+
+function readExportSettings() {
+  return {
+    format: exportFormat.value,
+    quality: Math.min(1, Math.max(0.6, Number(exportQuality.value) / 100))
+  };
+}
+
+function updateExportHint() {
+  qualityLabel.textContent = Math.round(readExportSettings().quality * 100) + "%";
+  const hints = {
+    auto: "Авто обирає менший із JPEG і WebP. Прозорість зберігається у WebP; якщо він недоступний — у PNG.",
+    "image/webp": "WebP зменшує вагу зі збереженням прозорості. Якщо браузер його не підтримує, буде PNG.",
+    "image/jpeg": "JPEG підходить для фото. Прозорі ділянки отримають білий фон.",
+    "image/png": "PNG зберігає зображення без втрат. Шум може суттєво збільшити вагу; якість для PNG не змінюється."
+  };
+  exportHint.textContent = hints[exportFormat.value] || hints.auto;
+  updateButtons();
+}
+
+function invalidateExport() {
+  state.exportId += 1;
+  state.encodedResult = null;
+  window.clearTimeout(exportTimer);
+  exportMeta.textContent = "";
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) {
+    return bytes + " Б";
+  }
+  if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(1) + " КБ";
+  }
+  return (bytes / (1024 * 1024)).toFixed(2) + " МБ";
+}
+
+function sizeComparison(inputBytes, outputBytes) {
+  if (!inputBytes) {
+    return formatBytes(outputBytes);
+  }
+  const change = (outputBytes / inputBytes - 1) * 100;
+  const rounded = Math.abs(change).toFixed(1);
+  const changeLabel = rounded === "0.0" ? "без змін" : (change > 0 ? "+" : "−") + rounded + "%";
+  return `${formatBytes(inputBytes)} → ${formatBytes(outputBytes)} (${changeLabel})`;
+}
+
+function typeLabel(type) {
+  return ({ "image/jpeg": "JPEG", "image/webp": "WebP", "image/png": "PNG" })[type] || type;
+}
+
+function scheduleExport(delay = EXPORT_DELAY) {
+  invalidateExport();
+  updateExportHint();
+  if (!state.appliedData) {
+    return;
+  }
+
+  const currentExport = state.exportId;
+  const data = state.appliedData;
+  const settings = readExportSettings();
+  const photo = state.photos[state.activeIndex];
+  const inputFile = photo && photo.file;
+  exportMeta.textContent = "Готую оптимізований файл...";
+  setStatus("Шум застосовано. Готую файл до завантаження...");
+
+  exportTimer = window.setTimeout(async () => {
+    try {
+      const result = await encodeImage(data, settings, inputFile);
+      if (currentExport !== state.exportId || data !== state.appliedData) {
+        return;
+      }
+      state.encodedResult = result;
+      exportMeta.textContent = typeLabel(result.blob.type) + " · " + sizeComparison(inputFile ? inputFile.size : 0, result.blob.size);
+      const fallback = result.fallback ? " Браузер не підтримує обраний формат, використано PNG." : "";
+      if (!state.isProcessingBatch) {
+        setStatus("Файл готовий до завантаження." + fallback);
+      }
+    } catch (error) {
+      if (currentExport !== state.exportId) {
+        return;
+      }
+      console.error(error);
+      exportMeta.textContent = "Не вдалося підготувати файл.";
+      setStatus("Помилка експорту. Спробуй інший формат або натисни «Застосувати» ще раз.");
+    } finally {
+      updateButtons();
+    }
+  }, delay);
 }
 
 function updateFileMeta(label) {
@@ -258,6 +369,8 @@ function schedulePreview(statusMessage) {
   }
 
   state.appliedData = null;
+  state.previewData = null;
+  invalidateExport();
   updateButtons();
   setStatus(statusMessage || "Оновлюю прев'ю...");
 
@@ -334,6 +447,7 @@ async function selectPhoto(index) {
   state.originalData = null;
   state.previewData = null;
   state.appliedData = null;
+  invalidateExport();
   resetPreviewSurface();
   updateButtons();
   updateBatchList();
@@ -362,6 +476,9 @@ async function selectPhoto(index) {
 }
 
 function handleFiles(fileList) {
+  if (state.isProcessingBatch) {
+    return;
+  }
   const imageFiles = Array.from(fileList || []).filter(isImageFile);
   if (!imageFiles.length) {
     setStatus("Оберіть файли зображень у форматі JPG, PNG або WEBP.");
@@ -377,9 +494,13 @@ function handleFiles(fileList) {
 }
 
 function resetAll() {
+  if (state.isProcessingBatch) {
+    return;
+  }
   state.originalData = null;
   state.previewData = null;
   state.appliedData = null;
+  invalidateExport();
   state.fileName = "";
   state.metaLabel = "";
   state.photos = [];
@@ -414,15 +535,19 @@ function sanitizeFilePart(name) {
   return clean || "photo";
 }
 
-function outputNameFor(file, index) {
+function outputNameFor(file, index, type) {
   const fallback = "photo-" + (index + 1);
   const base = sanitizeFilePart(getBaseName(file ? file.name : fallback));
-  return base + "-noise.png";
+  const extension = ({ "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" })[type];
+  if (!extension) {
+    throw new Error("Unexpected export format: " + type);
+  }
+  return base + "-noise." + extension;
 }
 
 function uniqueName(name, used) {
-  if (!used.has(name)) {
-    used.add(name);
+  if (!used.has(name.toLowerCase())) {
+    used.add(name.toLowerCase());
     return name;
   }
   const dot = name.lastIndexOf(".");
@@ -430,15 +555,15 @@ function uniqueName(name, used) {
   const ext = dot > 0 ? name.slice(dot) : "";
   let counter = 2;
   let candidate = base + "-" + counter + ext;
-  while (used.has(candidate)) {
+  while (used.has(candidate.toLowerCase())) {
     counter += 1;
     candidate = base + "-" + counter + ext;
   }
-  used.add(candidate);
+  used.add(candidate.toLowerCase());
   return candidate;
 }
 
-function canvasToBlob(targetCanvas, type = "image/png") {
+function canvasToBlob(targetCanvas, type = "image/png", quality) {
   return new Promise((resolve, reject) => {
     targetCanvas.toBlob((blob) => {
       if (blob) {
@@ -446,8 +571,78 @@ function canvasToBlob(targetCanvas, type = "image/png") {
         return;
       }
       reject(new Error("Canvas export failed"));
-    }, type);
+    }, type, quality);
   });
+}
+
+function hasTransparency(data) {
+  for (let index = 3; index < data.data.length; index += 4) {
+    if (data.data[index] !== 255) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Single exports and ZIP entries use the same encoder and actual MIME type.
+async function encodeImage(data, settings, inputFile) {
+  const target = document.createElement("canvas");
+  target.width = data.width;
+  target.height = data.height;
+  const targetCtx = target.getContext("2d");
+  targetCtx.putImageData(data, 0, 0);
+  const transparent = hasTransparency(data);
+  const format = settings.format;
+
+  if (format === "image/jpeg" && transparent) {
+    targetCtx.globalCompositeOperation = "destination-over";
+    targetCtx.fillStyle = "#fff";
+    targetCtx.fillRect(0, 0, target.width, target.height);
+    targetCtx.globalCompositeOperation = "source-over";
+  }
+
+  try {
+    if (format !== "auto") {
+      const blob = await canvasToBlob(target, format, settings.quality);
+      if (blob.type !== format && blob.type !== "image/png") {
+        throw new Error("Unexpected browser export format");
+      }
+      return { blob, fallback: blob.type !== format };
+    }
+
+    // Browsers fall back to PNG for unsupported formats: compare only actual types.
+    const candidates = [];
+    let pngFallback = null;
+    const types = transparent ? ["image/webp"] : ["image/webp", "image/jpeg"];
+    for (const type of types) {
+      try {
+        const blob = await canvasToBlob(target, type, settings.quality);
+        if (blob.type === type) {
+          candidates.push(blob);
+        } else if (blob.type === "image/png") {
+          pngFallback = blob;
+        }
+      } catch (error) {
+        console.warn("Export format unavailable", type, error);
+      }
+    }
+
+    if (!candidates.length) {
+      const blob = pngFallback || await canvasToBlob(target);
+      return { blob, fallback: true };
+    }
+
+    // Small transparent PNG artwork can remain smaller without lossy conversion.
+    // No extra PNG encoding is needed for ordinary opaque photographs.
+    if (transparent && inputFile && inputFile.type === "image/png" && inputFile.size < candidates[0].size) {
+      candidates.push(pngFallback || await canvasToBlob(target));
+    }
+    const blob = candidates.reduce((smallest, candidate) => candidate.size < smallest.size ? candidate : smallest);
+    return { blob, fallback: false };
+  } finally {
+    target.width = 0;
+    target.height = 0;
+  }
 }
 
 function downloadBlob(blob, name) {
@@ -461,22 +656,16 @@ function downloadBlob(blob, name) {
   window.setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
-async function downloadCurrentImage() {
-  if (!state.appliedData) {
+function downloadCurrentImage() {
+  if (!state.encodedResult || state.isProcessingBatch) {
     return;
   }
-
-  try {
-    const blob = await canvasToBlob(canvas);
-    const activePhoto = state.photos[state.activeIndex];
-    downloadBlob(blob, outputNameFor(activePhoto && activePhoto.file, state.activeIndex));
-  } catch (error) {
-    console.error(error);
-    setStatus("Не вдалося підготувати файл до завантаження.");
-  }
+  const blob = state.encodedResult.blob;
+  const activePhoto = state.photos[state.activeIndex];
+  downloadBlob(blob, outputNameFor(activePhoto && activePhoto.file, state.activeIndex, blob.type));
 }
 
-async function renderFileToBlob(file, strength) {
+async function renderFileToBlob(file, strength, settings) {
   const image = await loadImageFromFile(file);
   const originalWidth = image.naturalWidth || image.width;
   const originalHeight = image.naturalHeight || image.height;
@@ -490,9 +679,9 @@ async function renderFileToBlob(file, strength) {
 
   const source = tempCtx.getImageData(0, 0, fitted.width, fitted.height);
   const result = applyNoise(source, strength);
-  tempCtx.putImageData(result, 0, 0);
-
-  return canvasToBlob(tempCanvas);
+  tempCanvas.width = 0;
+  tempCanvas.height = 0;
+  return encodeImage(result, settings, file);
 }
 
 const crcTable = (() => {
@@ -610,6 +799,9 @@ async function downloadBatch() {
     return;
   }
 
+  const photos = state.photos.slice();
+  const strength = state.noiseStrength;
+  const settings = readExportSettings();
   state.isProcessingBatch = true;
   downloadBatchBtn.textContent = "Готуємо пак...";
   updateBatchList();
@@ -618,16 +810,23 @@ async function downloadBatch() {
   const usedNames = new Set();
   const entries = [];
   let failed = 0;
+  let totalInputBytes = 0;
+  let totalOutputBytes = 0;
+  let fallbacks = 0;
 
   try {
-    for (let i = 0; i < state.photos.length; i += 1) {
-      const photo = state.photos[i];
-      setBatchProgress(`Обробка ${i + 1}/${state.photos.length}: ${photo.file.name}`);
+    for (let i = 0; i < photos.length; i += 1) {
+      const photo = photos[i];
+      setBatchProgress(`Обробка ${i + 1}/${photos.length}: ${photo.file.name}`);
 
       try {
-        const blob = await renderFileToBlob(photo.file, state.noiseStrength);
+        const result = await renderFileToBlob(photo.file, strength, settings);
+        const blob = result.blob;
+        totalInputBytes += photo.file.size;
+        totalOutputBytes += blob.size;
+        fallbacks += result.fallback ? 1 : 0;
         entries.push({
-          name: uniqueName(outputNameFor(photo.file, i), usedNames),
+          name: uniqueName(outputNameFor(photo.file, i, blob.type), usedNames),
           blob,
           date: photo.file.lastModified ? new Date(photo.file.lastModified) : new Date()
         });
@@ -647,11 +846,19 @@ async function downloadBatch() {
     const zip = await createZip(entries);
     downloadBlob(zip, "noise-pack-" + dateStamp(new Date()) + ".zip");
 
-    const message = failed
+    let message = failed
       ? `Готово: ${entries.length} фото, не вдалося: ${failed}.`
       : `Готово: ${entries.length} фото.`;
+    message += ` Файли: ${sizeComparison(totalInputBytes, totalOutputBytes)}. ZIP: ${formatBytes(zip.size)}.`;
+    if (fallbacks) {
+      message += ` PNG через обмеження браузера: ${fallbacks}.`;
+    }
     setBatchProgress(message);
     setStatus("Пак оброблено та підготовлено до завантаження.");
+  } catch (error) {
+    console.error("Batch export failed", error);
+    setBatchProgress("Не вдалося створити ZIP. Спробуй менший пакет.");
+    setStatus("Не вдалося підготувати пакет до завантаження.");
   } finally {
     state.isProcessingBatch = false;
     downloadBatchBtn.textContent = "Завантажити пак";
@@ -679,19 +886,25 @@ fileInput.addEventListener("change", (event) => {
 });
 
 preview.addEventListener("click", () => {
-  fileInput.click();
+  if (!state.isProcessingBatch) {
+    fileInput.click();
+  }
 });
 
 preview.addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
-    fileInput.click();
+    if (!state.isProcessingBatch) {
+      fileInput.click();
+    }
   }
 });
 
 preview.addEventListener("dragover", (event) => {
   event.preventDefault();
-  preview.classList.add("drop-active");
+  if (!state.isProcessingBatch) {
+    preview.classList.add("drop-active");
+  }
 });
 
 preview.addEventListener("dragleave", () => {
@@ -717,13 +930,23 @@ incBtn.addEventListener("click", () => {
 });
 
 applyBtn.addEventListener("click", () => {
-  if (!state.previewData) {
+  if (!state.previewData || state.isProcessingBatch) {
     return;
   }
   state.appliedData = cloneImageData(state.previewData);
   drawData(state.appliedData);
-  updateButtons();
-  setStatus("Шум застосовано. Файл готовий до завантаження.");
+  scheduleExport(0);
+});
+
+exportFormat.addEventListener("change", () => {
+  if (!state.isProcessingBatch) {
+    scheduleExport();
+  }
+});
+exportQuality.addEventListener("input", () => {
+  if (!state.isProcessingBatch) {
+    scheduleExport();
+  }
 });
 
 downloadBtn.addEventListener("click", downloadCurrentImage);
@@ -750,6 +973,7 @@ themeToggle.addEventListener("click", () => {
 });
 
 initTheme();
+updateExportHint();
 updateNoiseLabel();
 updateFileMeta("");
 updateBatchList();

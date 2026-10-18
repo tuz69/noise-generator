@@ -370,6 +370,21 @@ body[data-theme="dark"] canvas {
   margin-top: 18px;
 }
 
+.export-hint {
+  margin-top: 14px;
+}
+
+.export-meta {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 .file-row,
 .action-grid,
 .batch-actions {

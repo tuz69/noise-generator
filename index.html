@@ -13,7 +13,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Додати шум на фото онлайн | Безкоштовний noise generator</title>
-  <meta name="description" content="Додай шум на фото онлайн прямо у браузері. Керуй інтенсивністю, типом зерна, переглядай результат та завантажуй готові PNG або ZIP-пак без реєстрації.">
+  <meta name="description" content="Додай шум на фото онлайн прямо у браузері. Налаштуй зерно, обери WebP, JPG або PNG та завантаж оптимізовані фото чи ZIP-пак без реєстрації.">
   <meta name="keywords" content="додати шум на фото, noise generator online, зерно на фото, обробка фото онлайн, noise texture, шум на зображення">
   <meta name="robots" content="index, follow">
   <meta name="author" content="tuz69">
@@ -91,7 +91,7 @@
           "name": "У якому форматі можна завантажити результат?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Окреме фото завантажується у форматі PNG, а пакетна обробка зберігається як ZIP-архів із PNG-файлами."
+            "text": "Обери автоматичну оптимізацію, WebP, JPG або PNG без втрат. Автоматичний режим підбирає компактний формат зі збереженням прозорості. Пакет фото завантажується ZIP-архівом."
           }
         }
       ]
@@ -111,7 +111,7 @@
 
       <div class="hero-copy">
         <h1>Додати шум на фото онлайн</h1>
-        <p class="lead">Завантаж фото або цілий пак, налаштуй силу шуму, переглянь результат і збережи PNG чи ZIP. Усе працює локально в браузері без реєстрації.</p>
+        <p class="lead">Завантаж фото або цілий пак, налаштуй силу шуму та збережи результат із меншим розміром файлу. Усе працює локально в браузері без реєстрації.</p>
       </div>
     </header>
 
@@ -163,11 +163,29 @@
               </div>
             </section>
 
+            <section class="panel" aria-labelledby="exportTitle">
+              <h3 id="exportTitle">Збереження</h3>
+              <label class="control-label" for="exportFormat">Формат файлу</label>
+              <select id="exportFormat" aria-describedby="exportHint">
+                <option value="auto">Авто — менший файл</option>
+                <option value="image/webp">WebP</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/png">PNG — без втрат</option>
+              </select>
+              <div id="qualityControl" class="control-spacing">
+                <label class="control-label" for="exportQuality">Якість: <span id="qualityLabel">90%</span></label>
+                <input id="exportQuality" type="range" min="60" max="100" value="90" step="1" aria-describedby="exportHint">
+                <div class="helper-row"><span>Менший файл</span><span>Більше деталей</span></div>
+              </div>
+              <p class="panel-note export-hint" id="exportHint">Автоматичний вибір компактного формату зі збереженням прозорості.</p>
+              <p class="export-meta" id="exportMeta" role="status" aria-live="polite">Розмір файлу з’явиться після застосування шуму.</p>
+            </section>
+
             <section class="panel">
               <h3>Дії</h3>
               <div class="action-grid">
                 <button id="apply" class="btn btn-primary" type="button" disabled>Застосувати</button>
-                <button id="download" class="btn btn-accent" type="button" disabled>Завантажити PNG</button>
+                <button id="download" class="btn btn-accent" type="button" disabled>Завантажити</button>
               </div>
               <div class="secondary-action action-grid">
                 <button id="zoom" class="btn btn-muted" type="button" disabled>Приблизити</button>
@@ -197,7 +215,7 @@
           <ol>
             <li>Завантаж фото з комп'ютера або перетягни один чи кілька файлів на полотно.</li>
             <li>Налаштуй силу шуму та переглянь активне фото у прев'ю.</li>
-            <li>Натисни «Застосувати» для одного PNG або «Завантажити пак» для ZIP з усіма фото.</li>
+            <li>Обери формат і якість, натисни «Застосувати» та перевір розмір файлу. Завантаж окреме фото або ZIP-пак.</li>
           </ol>
         </section>
 
@@ -205,6 +223,10 @@
           <p class="panel-kicker">FAQ</p>
           <h2 id="faqTitle">Поширені питання</h2>
           <div class="faq-list">
+            <div class="faq-item">
+              <h3>Як зменшити розмір результату?</h3>
+              <p>Залиш формат «Авто» або обери WebP чи JPG та налаштуй якість. PNG зберігає кожен піксель без втрат, тому з шумом часто важить більше. Навіть після оптимізації зерно може збільшити розмір порівняно з оригіналом.</p>
+            </div>
             <div class="faq-item">
               <h3>Чи можна додати шум без втрати приватності?</h3>
               <p>Так. Обробка працює локально, тому файл не завантажується на сервер і не потребує акаунта.</p>
