@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tuz69.github.io/noise-generator/sitemap.xml
+Sitemap: https://noise-generator-five.vercel.app/sitemap.xml
